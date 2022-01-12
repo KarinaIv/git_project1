@@ -46,9 +46,8 @@ if __name__ == '__main__':
                     block_y += 5
                     draw_snake_block()
 
-
             if event.type == pygame.QUIT:
-                running = False
+                 running = False
 
 
         pygame.display.flip()
