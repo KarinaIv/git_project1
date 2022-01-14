@@ -10,7 +10,6 @@ class Snake:
         self.snake_length = 1
         self.screen = screen
         self.block = pygame.image.load('block.png').convert()
-
         self.x = [30]
         self.y = [30]
 
