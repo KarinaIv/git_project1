@@ -110,8 +110,8 @@ class Game:
     def strike(self, x1, y1, x2, y2):
         # функции, когда змейка съедает еду
 
-        if x1 >= x2 and x1 <= x2 + size_of_block:
-            if y1 >= y2 and y1 <= y2 + size_of_block:
+        if x1 >= x2 and x1 < x2 + size_of_block:
+            if y1 >= y2 and y1 < y2 + size_of_block:
                 return True
 
         return False
@@ -119,13 +119,43 @@ class Game:
     def play(self):
         self.snake.body_moves()
         self.food.draw_food()
+        self.score()
+
+        pygame.display.flip()
 
         if self.strike(self.snake.x[0], self.snake.y[0], self.food.x, self.food.y):
             self.snake.update_snake_length()
             self.food.move()
 
+        for i in range(1, self.snake.snake_length):
+            if self.strike(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
+
+                raise "Your snake eat yourself"
+
+    def game_over(self):
+
+        font = pygame.font.SysFont('Cavorting', 30)
+        line1 = font.render(f"Вы проиграли! Ваш рекорд {self.snake.snake_length}", True, (255, 0, 0))
+        self.surface.blit(line1, (300, 310))
+
+        line2 = font.render("Чтобы сыграть снова нажмите Enter. Чтобы выйти нажмите Escape", True, (255, 0, 0))
+        self.surface.blit(line2, (300, 360))
+
+        pygame.display.flip()
+
+    def new_game(self):
+        self.snake = Snake(self.surface, 1)
+        self.food = Food(self.surface)
+
+    def score(self):
+        font = pygame.font.SysFont('Cavorting', 30)
+        score = font.render(f"Рекорд: {self.snake.snake_length}", True, (255, 000, 000))
+
+        self.surface.blit(score, (20, 20))
+
     def run(self):
         print("Let's go!!!")
+        fail = False
         running = True
 
         while running:
@@ -134,20 +164,34 @@ class Game:
                     if event.key == K_ESCAPE:
                         running = False
 
-                    if event.key == K_RIGHT or event.key == K_d:
-                        self.snake.move_right()
-                    if event.key == K_LEFT or event.key == K_a:
-                        self.snake.move_left()
+                    if event.key == K_RETURN or event.key == K_KP_ENTER:
+                        fail = False
 
-                    if event.key == K_UP or event.key == K_w:
-                        self.snake.move_up()
-                    if event.key == K_DOWN or event.key == K_s:
-                        self.snake.move_down()
+                    if not fail:
 
-                if event.type == pygame.QUIT:
+                        if event.key == K_RIGHT or event.key == K_d:
+                            self.snake.move_right()
+                        if event.key == K_LEFT or event.key == K_a:
+                            self.snake.move_left()
+
+                        if event.key == K_UP or event.key == K_w:
+                            self.snake.move_up()
+                        if event.key == K_DOWN or event.key == K_s:
+                            self.snake.move_down()
+
+                elif event.type == pygame.QUIT:
                     running = False
 
-            self.play()
+            try:
+
+                if not fail:
+                    self.play()
+
+            except Exception as e:
+                self.game_over()
+                fail = True
+                self.new_game()
+
 
             time.sleep(0.1)
 
@@ -156,3 +200,4 @@ if __name__ == '__main__':
     game = Game()
     game.run()
     print('Game over:(')
+
