@@ -6,6 +6,10 @@ import random
 
 
 size_of_block = 30
+dis_width = 1200
+dis_height = 720
+
+
 
 
 class Food:
@@ -36,7 +40,8 @@ class Snake:
         self.snake_length = length
         self.screen = screen
         self.block = pygame.image.load('block.jpg').convert()
-
+        self.x1 = dis_width / 2
+        self.y1 = dis_height / 2
         self.x = [30] * length
         self.y = [30] * length
 
@@ -109,7 +114,6 @@ class Game:
 
     def strike(self, x1, y1, x2, y2):
         # функции, когда змейка съедает еду
-
         if x1 >= x2 and x1 < x2 + size_of_block:
             if y1 >= y2 and y1 < y2 + size_of_block:
                 return True
@@ -131,6 +135,10 @@ class Game:
             if self.strike(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
 
                 raise "Your snake eat yourself"
+
+        if not (0 <= self.snake.x[0] <= 1200 and 0 <= self.snake.y[0] <= 720):
+
+            raise "Your snake hit the boundry"
 
     def game_over(self):
 
