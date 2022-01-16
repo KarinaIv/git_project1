@@ -101,7 +101,7 @@ class Game:
         pygame.display.set_caption('Snake Game')
         self.surface.fill('#000000')
 
-        self.snake = Snake(self.surface, 10)
+        self.snake = Snake(self.surface, 1)
         self.snake.draw_snake_block()
 
         self.food = Food(self.surface)
@@ -121,6 +121,7 @@ class Game:
         self.food.draw_food()
 
         if self.strike(self.snake.x[0], self.snake.y[0], self.food.x, self.food.y):
+            self.snake.update_snake_length()
             self.food.move()
 
     def run(self):
