@@ -2,23 +2,49 @@ import pygame
 from pygame.locals import *
 import sys
 import time
+import random
+
 
 size_of_block = 30
+
+
+class Food:
+    # создаём класс еды для змейки
+
+    def __init__(self, screen):
+        self.screen = screen
+        self.food = pygame.image.load('apple.png').convert()
+
+        # задаём начальное положение змейки
+
+        self.x = random.randint(1, 39) * size_of_block
+        self.y = random.randint(1, 23) * size_of_block
+
+    def draw_food(self):
+        self.screen.blit(self.food, (self.x, self.y))
+        pygame.display.flip()
+
+    def move(self):
+        self.x = random.randint(1, 39) * size_of_block
+        self.y = random.randint(1, 23) * size_of_block
 
 
 class Snake:
     # создаём класс змейки
 
-    def __init__(self, screen):
-        self.snake_length = 1
+    def __init__(self, screen, length):
+        self.snake_length = length
         self.screen = screen
-        self.block = pygame.image.load('block.png').convert()
-        self.x = [30]
-        self.y = [30]
+        self.block = pygame.image.load('block.jpg').convert()
+
+        self.x = [30] * length
+        self.y = [30] * length
+
         self.direction = 'down'
 
     def draw_snake_block(self):
-        self.screen.fill('#aed6dc')
+        self.screen.fill('#000000')
+
         for i in range(self.snake_length):
             self.screen.blit(self.block, (self.x[i], self.y[i]))
 
@@ -57,6 +83,11 @@ class Snake:
 
         self.draw_snake_block()
 
+    def update_snake_length(self):
+        self.snake_length += 1
+        self.x.append(-1)
+        self.y.append(-1)
+
 
 class Game:
     # создаём класс игрового процесса
@@ -64,14 +95,33 @@ class Game:
     def __init__(self):
         pygame.init()
 
-        self.size = self.width, self.height = 1000, 700
-        self.screen = pygame.display.set_mode(self.size)
+        self.size = self.width, self.height = 1200, 720
+        self.surface = pygame.display.set_mode(self.size)
 
         pygame.display.set_caption('Snake Game')
-        self.screen.fill('#aed6dc')
+        self.surface.fill('#000000')
 
-        self.snake = Snake(self.screen)
+        self.snake = Snake(self.surface, 10)
         self.snake.draw_snake_block()
+
+        self.food = Food(self.surface)
+        self.food.draw_food()
+
+    def strike(self, x1, y1, x2, y2):
+        # функции, когда змейка съедает еду
+
+        if x1 >= x2 and x1 <= x2 + size_of_block:
+            if y1 >= y2 and y1 <= y2 + size_of_block:
+                return True
+
+        return False
+
+    def play(self):
+        self.snake.body_moves()
+        self.food.draw_food()
+
+        if self.strike(self.snake.x[0], self.snake.y[0], self.food.x, self.food.y):
+            self.food.move()
 
     def run(self):
         print("Let's go!!!")
@@ -96,8 +146,9 @@ class Game:
                 if event.type == pygame.QUIT:
                     running = False
 
-            self.snake.body_moves()
-            time.sleep(0.3)
+            self.play()
+
+            time.sleep(0.1)
 
 
 if __name__ == '__main__':
