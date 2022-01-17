@@ -6,10 +6,6 @@ import random
 
 
 size_of_block = 30
-dis_width = 1200
-dis_height = 720
-
-
 
 
 class Food:
@@ -19,7 +15,7 @@ class Food:
         self.screen = screen
         self.food = pygame.image.load('apple.png').convert()
 
-        # задаём начальное положение змейки
+        # задаём начальное положение еды
 
         self.x = random.randint(1, 39) * size_of_block
         self.y = random.randint(1, 23) * size_of_block
@@ -40,8 +36,7 @@ class Snake:
         self.snake_length = length
         self.screen = screen
         self.block = pygame.image.load('block.jpg').convert()
-        self.x1 = dis_width / 2
-        self.y1 = dis_height / 2
+
         self.x = [30] * length
         self.y = [30] * length
 
@@ -90,6 +85,8 @@ class Snake:
 
     def update_snake_length(self):
         self.snake_length += 1
+        print('Your snake looks more and more like a real python!')
+
         self.x.append(-1)
         self.y.append(-1)
 
@@ -113,7 +110,8 @@ class Game:
         self.food.draw_food()
 
     def strike(self, x1, y1, x2, y2):
-        # функции, когда змейка съедает еду
+        # функция, когда змейка съедает еду
+
         if x1 >= x2 and x1 < x2 + size_of_block:
             if y1 >= y2 and y1 < y2 + size_of_block:
                 return True
@@ -131,14 +129,16 @@ class Game:
             self.snake.update_snake_length()
             self.food.move()
 
+        # если змейка 'столкнулась' сама с собой
         for i in range(1, self.snake.snake_length):
             if self.strike(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
 
                 raise "Your snake eat yourself"
 
+        # если змейка врезалась в стенки экрана
         if not (0 <= self.snake.x[0] <= 1200 and 0 <= self.snake.y[0] <= 720):
 
-            raise "Your snake hit the boundry"
+            raise "Your snake hit the boundary"
 
     def game_over(self):
 
@@ -152,6 +152,8 @@ class Game:
         pygame.display.flip()
 
     def new_game(self):
+        # функция перезапуска игры
+
         self.snake = Snake(self.surface, 1)
         self.food = Food(self.surface)
 
@@ -200,7 +202,6 @@ class Game:
                 fail = True
                 self.new_game()
 
-
             time.sleep(0.1)
 
 
@@ -208,4 +209,3 @@ if __name__ == '__main__':
     game = Game()
     game.run()
     print('Game over:(')
-
