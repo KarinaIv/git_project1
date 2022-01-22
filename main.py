@@ -2,26 +2,90 @@ import pygame
 from pygame.locals import *
 import sys
 import time
+import os
 import random
 
 
+pygame.init()
+sc = pygame.display.set_mode((400, 300))
+
+# pygame.mixer.music.load('music.mp3')
+# pygame.mixer.music.play()
+#
+# sound1 = pygame.mixer.Sound('music.mp3')
+# sound2 = pygame.mixer.Sound('music.mp3')
+
 size_of_block = 30
+dis_width = 1200
+dis_height = 720
+size = dis_width, dis_height
+screen = pygame.display.set_mode(size)
+FPS = 50
+
+
+def load_image(name, colorkey=None):
+    fullname = name
+    # если файл не существует, то выходим
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
+
+
+class Splashscreen:
+    def __init__(self):
+        self.show = True
+
+    @staticmethod
+    def terminate():
+        pygame.quit()
+        sys.exit()
+
+    def start_screen(self):
+        if self.show:
+            intro_text = ["", "",
+                          "Нажмите на пробел, чтобы начать игру",
+                          "Нажмите на клавишу r, чтобы перейти к правилам игры",
+                          "Нажмите на клавишу Esc, чтобы выйти из игры"]
+
+            fon = pygame.transform.scale(load_image('fon.jpg'), (dis_width, dis_height))
+            screen.blit(fon, (0, 0))
+            font = pygame.font.Font(None, 30)
+            text_coord = 50
+            for line in intro_text:
+                string_rendered = font.render(line, 1, pygame.Color('red'))
+                intro_rect = string_rendered.get_rect()
+                text_coord += 10
+                intro_rect.top = text_coord
+                intro_rect.x = 10
+                text_coord += intro_rect.height
+                screen.blit(string_rendered, intro_rect)
+
+
+splashscr = Splashscreen()
 
 
 class Food:
     # создаём класс еды для змейки
-
     def __init__(self, screen):
         self.screen = screen
         self.food = pygame.image.load('apple.png').convert()
 
-        # задаём начальное положение еды
-
+        # задаём начальное положение змейки
         self.x = random.randint(1, 39) * size_of_block
         self.y = random.randint(1, 23) * size_of_block
 
     def draw_food(self):
         self.screen.blit(self.food, (self.x, self.y))
+        splashscr.start_screen()
         pygame.display.flip()
 
     def move(self):
@@ -31,11 +95,13 @@ class Food:
 
 class Snake:
     # создаём класс змейки
-
     def __init__(self, screen, length):
         self.snake_length = length
         self.screen = screen
-        self.block = pygame.image.load('block.jpg').convert()
+        self.block = pygame.image.load('circle.png').convert()
+
+        self.x1 = dis_width / 2
+        self.y1 = dis_height / 2
 
         self.x = [30] * length
         self.y = [30] * length
@@ -64,13 +130,10 @@ class Snake:
 
     def body_moves(self):
         # обновление тела
-
         for i in range(self.snake_length - 1, 0, -1):
             self.x[i] = self.x[i - 1]
             self.y[i] = self.y[i - 1]
-
         # изменение направления движения головы
-
         if self.direction == 'up':
             self.y[0] -= size_of_block
         if self.direction == 'down':
@@ -80,7 +143,6 @@ class Snake:
             self.x[0] -= size_of_block
         if self.direction == 'right':
             self.x[0] += size_of_block
-
         self.draw_snake_block()
 
     def update_snake_length(self):
@@ -91,15 +153,17 @@ class Snake:
         self.y.append(-1)
 
 
+class MyGameException(Exception):
+    pass
+
+
 class Game:
     # создаём класс игрового процесса
-
     def __init__(self):
         pygame.init()
 
         self.size = self.width, self.height = 1200, 720
         self.surface = pygame.display.set_mode(self.size)
-
         pygame.display.set_caption('Snake Game')
         self.surface.fill('#000000')
 
@@ -115,7 +179,6 @@ class Game:
         if x1 >= x2 and x1 < x2 + size_of_block:
             if y1 >= y2 and y1 < y2 + size_of_block:
                 return True
-
         return False
 
     def play(self):
@@ -124,7 +187,6 @@ class Game:
         self.score()
 
         pygame.display.flip()
-
         if self.strike(self.snake.x[0], self.snake.y[0], self.food.x, self.food.y):
             self.snake.update_snake_length()
             self.food.move()
@@ -132,81 +194,145 @@ class Game:
         # если змейка 'столкнулась' сама с собой
         for i in range(1, self.snake.snake_length):
             if self.strike(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
-
-                raise "Your snake eat yourself"
+                raise MyGameException("Your snake eat yourself")
 
         # если змейка врезалась в стенки экрана
         if not (0 <= self.snake.x[0] <= 1200 and 0 <= self.snake.y[0] <= 720):
-
-            raise "Your snake hit the boundary"
+            raise MyGameException("Your snake hit the boundary")
 
     def game_over(self):
 
         font = pygame.font.SysFont('Cavorting', 30)
-        line1 = font.render(f"Вы проиграли! Ваш рекорд {self.snake.snake_length}", True, (255, 0, 0))
+        line1 = font.render(f"Вы проиграли! Ваш счёт {self.snake.snake_length}", True, (255, 0, 0))
         self.surface.blit(line1, (300, 310))
 
         line2 = font.render("Чтобы сыграть снова нажмите Enter. Чтобы выйти нажмите Escape", True, (255, 0, 0))
         self.surface.blit(line2, (300, 360))
-
         pygame.display.flip()
 
     def new_game(self):
         # функция перезапуска игры
-
         self.snake = Snake(self.surface, 1)
         self.food = Food(self.surface)
 
     def score(self):
         font = pygame.font.SysFont('Cavorting', 30)
-        score = font.render(f"Рекорд: {self.snake.snake_length}", True, (255, 000, 000))
+        count = font.render(f"Счёт: {self.snake.snake_length}", True, (255, 000, 000))
+        self.surface.blit(count, (20, 20))
 
-        self.surface.blit(score, (20, 20))
+        with open('score.txt', 'r') as f:
+            tnp = int(f.read())
+
+        with open('score.txt', 'w') as f:
+            f.write(str(max(tnp, self.snake.snake_length)))
+
+        font1 = pygame.font.SysFont('Cavorting', 30)
+        score = font1.render(f"Рекорд: {tnp}", True, (255, 000, 000))
+        self.surface.blit(score, (1050, 30))
 
     def run(self):
         print("Let's go!!!")
+
         fail = False
         running = True
-
+        # clock = pygame.time.Clock()
+        flag = True
+        splashscr.start_screen()
         while running:
             for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == K_ESCAPE:
+                if flag:
+                    if event.type == pygame.QUIT:
+                        splashscr.terminate()
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        if 20 < event.pos[0] < 40 and 60 < event.pos[1] < 80:
+                            flag = False
+                            splashscr.show = False
+                            print('Клик удался')
+                            continue
+                    elif event.type == pygame.KEYDOWN or \
+                            event.type == pygame.MOUSEBUTTONDOWN:
+                        flag = False
+                        splashscr.show = False
+
+                else:
+                    # while 1:
+                    if event.type == pygame.QUIT:
+                        sys.exit()
+
+                    elif event.type == pygame.KEYUP:
+                        if event.key == pygame.K_1:
+                            pygame.mixer.music.pause()
+                            # pygame.mixer.music.stop()
+                        elif event.key == pygame.K_2:
+                            pygame.mixer.music.unpause()
+                            # pygame.mixer.music.play()
+                            pygame.mixer.music.set_volume(0.5)
+                        elif event.key == pygame.K_3:
+                            pygame.mixer.music.unpause()
+                            # pygame.mixer.music.play()
+                            pygame.mixer.music.set_volume(1)
+
+                    elif event.type == pygame.MOUSEBUTTONUP:
+                        for i in range(1, 50):
+                            pass
+                            # if pygame.mixer.music.get_num_channels() != i:
+                            #    sound1.play()
+
+                        # if event.button == 1:
+                        #     sound1.play()
+                        # elif event.button == 3:
+                        #     sound2.play()
+
+                        pygame.time.delay(20)
+
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == K_ESCAPE:
+                            running = False
+                        if event.key == K_RETURN or event.key == K_KP_ENTER:
+                            fail = False
+                        if not fail:
+                            if event.key == K_RIGHT or event.key == K_d:
+                                self.snake.move_right()
+                            if event.key == K_LEFT or event.key == K_a:
+                                self.snake.move_left()
+
+                            if event.key == K_UP or event.key == K_w:
+                                self.snake.move_up()
+                            if event.key == K_DOWN or event.key == K_s:
+                                self.snake.move_down()
+                    elif event.type == pygame.QUIT:
                         running = False
-
-                    if event.key == K_RETURN or event.key == K_KP_ENTER:
-                        fail = False
-
-                    if not fail:
-
-                        if event.key == K_RIGHT or event.key == K_d:
-                            self.snake.move_right()
-                        if event.key == K_LEFT or event.key == K_a:
-                            self.snake.move_left()
-
-                        if event.key == K_UP or event.key == K_w:
-                            self.snake.move_up()
-                        if event.key == K_DOWN or event.key == K_s:
-                            self.snake.move_down()
-
-                elif event.type == pygame.QUIT:
-                    running = False
-
             try:
-
                 if not fail:
-                    self.play()
+                    if flag:
+                        splashscr.start_screen()
+                    else:
+                        self.play()
 
-            except Exception as e:
+
+            except MyGameException as e:
                 self.game_over()
                 fail = True
                 self.new_game()
-
             time.sleep(0.1)
 
+
+'''
+for event in pygame.event.get():
+    if event.type == pygame.QUIT:
+            Splashscreen.terminate()
+    elif event.type == pygame.KEYDOWN or \
+        event.type == pygame.MOUSEBUTTONDOWN:
+            Splashscreen.start_screen()
+    pygame.display.flip()
+    pygame.time.Clock().tick(FPS)
+    #clock.tick(FPS)
+    tmp = (30, 70)
+    #if event.pos == tmp:
+    #    Splashscreen.terminate()
+'''
 
 if __name__ == '__main__':
     game = Game()
     game.run()
     print('Game over:(')
-
