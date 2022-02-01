@@ -25,7 +25,6 @@ def load_image(name, colorkey=None):
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
-
     image = pygame.image.load(fullname)
     if colorkey is not None:
         image = image.convert()
@@ -47,7 +46,6 @@ class Splashscreen:
         sys.exit()
 
     def start_screen(self):
-        # print(self.show)
         if self.show:
             intro_text = ["", "",
                           "Кликните мышкой, чтобы начать игру",
@@ -58,7 +56,6 @@ class Splashscreen:
             screen.blit(fon, (0, 0))
             font = pygame.font.Font(None, 30)
             text_coord = 350
-
             for line in intro_text:
                 string_rendered = font.render(line, 1, pygame.Color('red'))
                 intro_rect = string_rendered.get_rect()
@@ -72,11 +69,8 @@ class Splashscreen:
     def regulations(self):
         if self.show:
             img = pygame.image.load('rules.jpg')
-            print('Я работаю')
-            # screen = pygame.display.set_mode(img.get_size(), pygame.FULLSCREEN)
             screen.blit(img, (0, 0))
             pygame.display.flip()
-            # os.system("pause")
 
 
 splashscr = Splashscreen()
@@ -125,12 +119,23 @@ class Snake:
 
         pygame.display.flip()
 
+    def move_up(self):
+        self.direction = 'up'
+
+    def move_down(self):
+        self.direction = 'down'
+
+    def move_left(self):
+        self.direction = 'left'
+
+    def move_right(self):
+        self.direction = 'right'
+
     def body_moves(self):
         # обновление тела
         for i in range(self.snake_length - 1, 0, -1):
             self.x[i] = self.x[i - 1]
             self.y[i] = self.y[i - 1]
-
         # изменение направления движения головы
         if self.direction == 'up':
             self.y[0] -= size_of_block
@@ -162,7 +167,6 @@ class Game:
 
         self.size = self.width, self.height = 1200, 720
         self.surface = pygame.display.set_mode(self.size)
-
         pygame.display.set_caption('Snake Game')
         self.surface.fill('#000000')
 
@@ -179,7 +183,6 @@ class Game:
         if x1 >= x2 and x1 < x2 + size_of_block:
             if y1 >= y2 and y1 < y2 + size_of_block:
                 return True
-
         return False
 
     def play(self):
@@ -213,7 +216,6 @@ class Game:
 
     def new_game(self):
         # функция перезапуска игры
-
         self.snake = Snake(self.surface, 1)
         self.food = Food(self.surface)
 
@@ -234,84 +236,66 @@ class Game:
 
     def run(self):
         print("Let's go!!!")
-
         fail = False
         running = True
-        # clock = pygame.time.Clock()
         flag = True
-        # flag_rules = False
         splashscr.start_screen()
-
         while running:
             for event in pygame.event.get():
-                # print(event)
-                #print(self.flag_rules)
                 pygame.display.flip()
 
-                '''if event.type == pygame.QUIT:
+                if event.type == pygame.QUIT:
                     sys.exit()
                 elif event.type == pygame.KEYUP:
                     if event.key == pygame.K_1:
                         pygame.mixer.music.pause()
-                        # pygame.mixer.music.stop()
                     elif event.key == pygame.K_2:
                         pygame.mixer.music.unpause()
-                        # pygame.mixer.music.play()
                         pygame.mixer.music.set_volume(0.5)
                     elif event.key == pygame.K_3:
                         pygame.mixer.music.unpause()
-                        # pygame.mixer.music.play()
                         pygame.mixer.music.set_volume(1)
-'''
 
                 if flag:
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                        running = False
                     if event.type == pygame.QUIT:
                         splashscr.terminate()
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_r and not self.flag_rules:
                         self.flag_rules = True
-                        #print('rul')
                         splashscr.regulations()
-                        # os.system("pause")
-                        # continue
 
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and self.flag_rules:
-                        #print('пробел')
                         self.flag_rules = False
                         splashscr.start_screen()
 
                     if event.type == pygame.MOUSEBUTTONDOWN and not self.flag_rules:
                         flag = False
                         splashscr.show = False
-                        #print('Клик удался')
                         continue
                     if event.type != pygame.KEYDOWN and \
                             event.type == pygame.MOUSEBUTTONDOWN and not self.flag_rules:
                         flag = False
                         splashscr.show = False
-                        #print('elsee')
 
                 else:
-                    #print('Вход в else')
-
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
                             running = False
                         if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
                             fail = False
-
                         if not fail:
                             if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                                self.snake.direction = 'right'
+                                self.snake.move_right()
                             if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                                self.snake.direction = 'left'
+                                self.snake.move_left()
 
                             if event.key == pygame.K_UP or event.key == pygame.K_w:
-                                self.snake.direction = 'up'
+                                self.snake.move_up()
                             if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                                self.snake.direction = 'down'
+                                self.snake.move_down()
                     elif event.type == pygame.QUIT:
                         running = False
-
             try:
                 if not fail and not self.flag_rules:
                     if flag:
@@ -319,29 +303,11 @@ class Game:
                     else:
                         self.play()
 
-
-            except MyGameException as e:
-                # Ловит исключения
+            except MyGameException:
                 self.game_over()
                 fail = True
                 self.new_game()
             time.sleep(0.1)
-
-
-'''
-for event in pygame.event.get():
-    if event.type == pygame.QUIT:
-            Splashscreen.terminate()
-    elif event.type == pygame.KEYDOWN or \
-        event.type == pygame.MOUSEBUTTONDOWN:
-            Splashscreen.start_screen()
-    pygame.display.flip()
-    pygame.time.Clock().tick(FPS)
-    #clock.tick(FPS)
-    tmp = (30, 70)
-    #if event.pos == tmp:
-    #    Splashscreen.terminate()
-'''
 
 
 if __name__ == '__main__':
